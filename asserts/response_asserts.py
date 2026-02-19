@@ -1,6 +1,18 @@
 class ResponseAsserts:
 
     @staticmethod
+    def _debug_response(response):
+        req = response.request
+        return (
+            f"\nREQUEST: {req.method} {req.url}"
+            f"\nREQ_HEADERS: {dict(req.headers)}"
+            f"\nREQ_BODY: {req.body}"
+            f"\nRESPONSE_STATUS: {response.status_code}"
+            f"\nRESP_HEADERS: {dict(response.headers)}"
+            f"\nRESP_BODY: {response.text}\n"
+        )
+
+    @staticmethod
     def assert_status(response, expected_status):
         assert response.status_code == expected_status, \
             ResponseAsserts._debug_response(response)
@@ -25,15 +37,3 @@ class ResponseAsserts:
     @staticmethod
     def assert_error_field_present(data):
         assert "reason" in data, f"No error field in response: {data}"
-
-    @staticmethod
-    def _debug_response(response):
-        req = response.request
-        return (
-            f"\nREQUEST: {req.method} {req.url}"
-            f"\nREQ_HEADERS: {dict(req.headers)}"
-            f"\nREQ_BODY: {req.body}"
-            f"\nRESPONSE_STATUS: {response.status_code}"
-            f"\nRESP_HEADERS: {dict(response.headers)}"
-            f"\nRESP_BODY: {response.text}\n"
-        )
