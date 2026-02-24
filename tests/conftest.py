@@ -6,31 +6,34 @@ from clients.restful_booker_client import RestfulBookerClient
 from data.booking_payloads import valid_auth_credentials, valid_booking_payload
 
 @pytest.fixture
-def api():
+def base_api():
     return BaseApiClient(BASE_URL)
 
 @pytest.fixture
-def rb(api):
-    return RestfulBookerClient(api)
+def rb_api(base_api):
+    return RestfulBookerClient(base_api)
 
 @pytest.fixture
-def auth_client(api, rb):
+def auth_rb_api(base_api, rb_api):
     creds = valid_auth_credentials()
-    response = rb.auth(creds["username"], creds["password"])
+    response = rb_api.auth(creds["username"], creds["password"])
     token = response.json()["token"]
-    api.set_token(token)
-    return rb
+    base_api.set_token(token)
+    return rb_api
 
 @pytest.fixture
-def booking_factory(rb):
+def booking_factory(auth_rb_api):
     created_ids = []
 
     def _create(payload=None):
         if payload is None:
             payload = valid_booking_payload()
-        response = rb.create_booking(payload)
+        response = auth_rb_api.create_booking(payload)
         booking_id = response.json()["bookingid"]
         created_ids.append(booking_id)
         return booking_id, payload
 
-    return _create
+    yield _create
+
+    for booking_id in created_ids:
+        auth_rb_api.delete_booking(booking_id)
