@@ -17,8 +17,6 @@ class BaseApiClient:
             raise ValueError("retries must be int >= 0")
         if not isinstance(retry_backoff, (int, float)) or retry_backoff < 0:
             raise ValueError("retry_backoff must be number >= 0")
-        if not base_url:
-            raise ValueError("base_url must not be empty")
 
         self.base_url = base_url.rstrip("/")
         self._token: Optional[str] = None
