@@ -5,17 +5,18 @@ from clients.base_api_client import BaseApiClient
 from clients.restful_booker_client import RestfulBookerClient
 from data.booking_payloads import valid_auth_credentials, valid_booking_payload
 
-@def base_api():
-    api = BaseApiClient(BASE_URL)
+@pytest.fixture
+    def base_api():
+        api = BaseApiClient(BASE_URL)
 
-    def _token_provider():
-        creds = valid_auth_credentials()
-        rb = RestfulBookerClient(api)
-        resp = rb.auth(creds["username"], creds["password"])
-        return resp.json()["token"]
+        def _token_provider():
+            creds = valid_auth_credentials()
+            rb = RestfulBookerClient(api)
+            resp = rb.auth(creds["username"], creds["password"])
+            return resp.json()["token"]
 
-    api.set_token_provider(_token_provider)
-    return api
+        api.set_token_provider(_token_provider)
+        return api
 
 @pytest.fixture
 def rb_api(base_api):
