@@ -1,6 +1,39 @@
 from datetime import datetime
 from typing import Any, Dict
+from jsonschema import validate, ValidationError
 
+BOOKING_RESPONSE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "bookingid": {"type": "number"},
+        "booking": {
+            "type": "object",
+            "properties": {
+                "firstname": {"type": "string"},
+                "lastname": {"type": "string"},
+                "totalprice": {"type": "number"},
+                "depositpaid": {"type": "boolean"},
+                "bookingdates": {
+                    "type": "object",
+                    "properties": {
+                        "checkin": {"type": "string"},
+                        "checkout": {"type": "string"}
+                    },
+                    "required": ["checkin", "checkout"]
+                },
+                "additionalneeds": {"type": "string"}
+            },
+            "required": [
+                "firstname",
+                "lastname",
+                "totalprice",
+                "depositpaid",
+                "bookingdates"
+            ]
+        }
+    },
+    "required": ["bookingid", "booking"]
+}
 
 class BookingAsserts:
 
@@ -13,26 +46,19 @@ class BookingAsserts:
             raise AssertionError(f"Invalid date format for {field_name}: {date_str}. Expected YYYY-MM-DD")
 
     @staticmethod
-    def assert_booking_has_required_fields(data: Dict[str, Any]) -> None:
-        required = ["firstname", "lastname", "totalprice", "depositpaid", "bookingdates"]
-        missing = [k for k in required if k not in data]
-        assert not missing, f"Missing booking fields: {missing}. Got: {data}"
-
-        assert isinstance(data["bookingdates"], dict), f"bookingdates is not an object. Got: {data}"
-
-        date_missing = [k for k in ["checkin", "checkout"] if k not in data["bookingdates"]]
-        assert not date_missing, f"Missing bookingdates fields: {date_missing}. Got: {data}"
-
-    @staticmethod
     def assert_booking_equals_subset(actual: Dict[str, Any], expected_subset: Dict[str, Any]) -> None:
         for key, value in expected_subset.items():
             assert actual.get(key) == value, f"Mismatch for {key}: expected {value}, got {actual.get(key)}"
 
+
     @staticmethod
-    def assert_booking_dates_format(booking: Dict[str, Any]) -> None:
-        BookingAsserts.assert_booking_has_required_fields(booking)
-        checkin = booking["bookingdates"]["checkin"]
-        checkout = booking["bookingdates"]["checkout"]
+    def assert_booking_schema(data):
+        try:
+            validate(instance=data, schema=BOOKING_RESPONSE_SCHEMA)
+        except ValidationError as e:
+            raise AssertionError(f"Schema validation failed: {e.message}")
+
 
         BookingAsserts.assert_date_format(checkin, "checkin")
         BookingAsserts.assert_date_format(checkout, "checkout")
+

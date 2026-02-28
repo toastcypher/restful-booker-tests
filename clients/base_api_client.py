@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseApiClient:
-    def __init__(self, base_url: str, timeout: int = 10, retries: int = 2, retry_backoff: float = 0.5):
+    def __init__(self, base_url: str, timeout: int = 10, retries: int = 2, retry_backoff: float = 0.5, auto_reauth: bool = True):
 
         if not isinstance(base_url, str) or not base_url.strip():
             raise ValueError("base_url must be a non-empty string")
@@ -24,6 +24,7 @@ class BaseApiClient:
         self.timeout = timeout
         self.retries = retries
         self.retry_backoff = float(retry_backoff)
+        self.auto_reauth = auto_reauth
 
 
     def set_token(self, token: str) -> None:
@@ -88,7 +89,7 @@ class BaseApiClient:
             try:
                 response = _do_request()
 
-                if response.status_code in (401, 403) and self._token_provider:
+                if self.auto_reauth and response.status_code in (401, 403) and self._token_provider:
                     logger.warning(f"AUTH FAILED: {method} {url} status={response.status_code}. Re-auth and retry once.")
                     new_token = self._token_provider()
                     self.set_token(new_token)
