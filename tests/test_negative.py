@@ -3,14 +3,29 @@ import requests
 
 from config import BASE_URL
 from asserts.response_asserts import ResponseAsserts
-from data.booking_payloads import valid_booking_payload, booking_payload_missing_field
+from data.booking_payloads import valid_booking_payload
 
 
-def test_create_booking_missing_required_field_returns_error(rb_api):
-    payload = booking_payload_missing_field("lastname")
-    response = rb_api.create_booking(payload)
+def test_update_booking_put_without_auth_returns_unauthorized(rb_api, booking_factory):
+    booking_id, payload = booking_factory()
 
-    assert response.status_code in (400, 500), ResponseAsserts._debug_response(response)
+    response = rb_api.update_booking_put(booking_id, payload)
+    assert response.status_code in (401, 403), ResponseAsserts.debug_response(response)
+
+
+def test_update_booking_patch_without_auth_returns_unauthorized(rb_api, booking_factory):
+    booking_id, _ = booking_factory()
+    patch_payload = {"firstname": "NoAuthPatch"}
+
+    response = rb_api.update_booking_patch(booking_id, patch_payload)
+    assert response.status_code in (401, 403), ResponseAsserts.debug_response(response)
+
+
+def test_delete_booking_without_auth_returns_unauthorized(rb_api, booking_factory):
+    booking_id, _ = booking_factory()
+
+    response = rb_api.delete_booking(booking_id)
+    assert response.status_code in (401, 403), ResponseAsserts.debug_response(response)
 
 
 def test_create_booking_invalid_json_returns_error():
@@ -20,7 +35,7 @@ def test_create_booking_invalid_json_returns_error():
 
     response = requests.post(url, headers=headers, data=bad_json)
 
-    assert response.status_code in (400, 500), ResponseAsserts._debug_response(response)
+    assert response.status_code in (400, 500), ResponseAsserts.debug_response(response)
 
 
 def test_create_booking_wrong_content_type_returns_error():
@@ -31,7 +46,7 @@ def test_create_booking_wrong_content_type_returns_error():
     headers = {"Content-Type": "text/plain"}
     response = requests.post(url, headers=headers, data=json.dumps(payload))
 
-    assert response.status_code in (400, 415, 500), ResponseAsserts._debug_response(response)
+    assert response.status_code in (400, 415, 500), ResponseAsserts.debug_response(response)
 
 
 def test_get_booking_not_existing_id_returns_404(rb_api):

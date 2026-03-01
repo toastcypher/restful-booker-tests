@@ -21,6 +21,17 @@ def valid_auth_credentials() -> Dict[str, str]:
         "password": password,
     }
 
+def invalid_auth_credentials_wrong_password() -> Dict[str, str]:
+    creds = valid_auth_credentials()
+    creds["password"] = creds["password"] + "_wrong"
+    return creds
+
+
+def invalid_auth_credentials_empty_password() -> Dict[str, str]:
+    creds = valid_auth_credentials()
+    creds["password"] = ""
+    return creds
+
 
 def valid_booking_payload() -> Dict[str, Any]:
     today = date.today()
